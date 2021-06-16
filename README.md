@@ -83,3 +83,31 @@ func main() {
 	consumerGroup.Start()
 }
 ```
+
+
+## Configs
+A quick way to setup a real connection to remote kafka server is to define a config file ~/.confluent/librdkafka.config
+```
+# Kafka
+bootstrap.servers=YOUR_BROKER_URL
+security.protocol=SASL_SSL
+sasl.mechanisms=PLAIN
+sasl.username=YOUR_USERNAME
+sasl.password=YOUR_PASSWORD
+```
+And you could build your queue config like
+```golang
+config := queue.NewConfigWithConfigFilePath("/Users/you/.confluent.confluent/librdkafka.config")
+// Create a job queue
+jobQueue, err := queue.NewQueue(config)
+```
+
+## Topics
+The job system current use three queues to store tasks, default-job-queue is where all the active jobs are stored, default-delayed-queue are all the retries jobs are stored, and default-dead-queue is where the dead jobs are stored. you could choose to over ride the topics by changing the config
+```golang
+config.DefaultQueueTopic = "some-other-name-queue"
+```
+Currently there is not priority on jobs, will probably introduce more queues later to implement that.
+
+## Order and partitions
+By default all tasks are distributed evenly across all parititions by hash the uuid of the job, so there is no guaranteed orders on tasks, if you absolutely need to keep tasks in order, you will have to change the JobDefinition to be FIFO, however, that will make your kafka topic unevenly distributed on partitions
