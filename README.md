@@ -1,6 +1,6 @@
 ## Job Queue on Kafka
 
-**kafka_job_queue** is an asynchronous job queue build on top of confluent kafka, it is inspired by [Machinery](https://github.com/RichardKnop/machinery) 
+**kafka-job-queue** is an asynchronous job queue build on top of confluent kafka, it is inspired by [Machinery](https://github.com/RichardKnop/machinery) 
 and [faktory](https://github.com/contribsys/faktory). 
 
 
