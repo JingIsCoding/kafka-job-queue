@@ -12,7 +12,6 @@ type AdminClient interface {
 	DescribeConfigs(ctx context.Context, resources []kafka.ConfigResource, options ...kafka.DescribeConfigsAdminOption) (result []kafka.ConfigResourceResult, err error)
 	CreateTopics(ctx context.Context, topics []kafka.TopicSpecification, options ...kafka.CreateTopicsAdminOption) (result []kafka.TopicResult, err error)
 	Close()
-
 	createTopicsIfNotExist(partition int, factor int, topics ...string) error
 }
 
@@ -20,7 +19,7 @@ type kafkaAdmin struct {
 	inner *kafka.AdminClient
 }
 
-func newAdminClient(conf *kafka.ConfigMap) (AdminClient, error) {
+func NewAdminClient(conf *kafka.ConfigMap) (AdminClient, error) {
 	client, err := kafka.NewAdminClient(conf)
 	return &kafkaAdmin{inner: client}, err
 }

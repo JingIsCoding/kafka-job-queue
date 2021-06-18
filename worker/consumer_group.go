@@ -2,7 +2,6 @@ package worker
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"sync"
 	"time"
@@ -102,6 +101,7 @@ func (group *kafkaConsumerGroup) Start() error {
 			worker.Run()
 		}()
 	}
+	group.queue.GetLogger().Debugf("Consumer group is ready")
 	group.waitWorkerGroup.Wait()
 	return nil
 }
@@ -169,7 +169,6 @@ func dispatchJob(queue queue.Queue, consumer Consumer, dispatch func(kafka.Messa
 						continue
 					}
 					dispatch(*e)
-					continue
 				case kafka.PartitionEOF:
 					continue
 				case kafka.Error:
@@ -178,9 +177,7 @@ func dispatchJob(queue queue.Queue, consumer Consumer, dispatch func(kafka.Messa
 						queue.GetLogger().Errorf("Can not recover from %v \n", e)
 						return
 					}
-					log.Printf("%% Error: %v\n", e)
-				default:
-					continue
+					queue.GetLogger().Errorf("%% Error: %v\n", e)
 				}
 			}
 		}
@@ -193,7 +190,7 @@ func defaultConsumerConfig(groupId string, config *kafka.ConfigMap) *kafka.Confi
 		newConfig[k] = v
 	}
 	newConfig.SetKey("group.id", groupId)
-	newConfig.SetKey("session.timeout.ms", 6000)
+	//newConfig.SetKey("session.timeout.ms", 6000)
 	newConfig.SetKey("go.events.channel.enable", true)
 	newConfig.SetKey("go.application.rebalance.enable", true)
 	newConfig.SetKey("enable.partition.eof", true)
