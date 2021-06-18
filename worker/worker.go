@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync/atomic"
 	"time"
 
 	"github.com/JingIsCoding/kafka_job_queue/job"
@@ -12,6 +13,8 @@ import (
 	"github.com/JingIsCoding/kafka_job_queue/queue"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
+
+var counter uint64
 
 type Worker interface {
 	Run()
@@ -70,23 +73,25 @@ func (worker *kafkaWorker) Run() {
 					continue
 				}
 				result := processJob(def.Perform, job)
+				job.SetResult(result)
+				counter = atomic.AddUint64(&counter, 1)
+				log.Println("counter is ", counter)
 				if result.Ok() {
 					if def.OnSuccess != nil {
-						job := queueJob.NewJob(def.OnSuccess.JobName, []queueJob.JobArgument{result.Data()})
+						job := queueJob.NewJob(def.OnSuccess.JobName, result.Value())
 						worker.queue.Enqueue(job)
 					}
-					defaultQueueConsumer.CommitMessage(&msg)
 				} else {
 					if err = retryJob(worker.queue, def, job); err != nil {
 						// insert into dead job queue
 						worker.queue.EnqueueTo(job, worker.queue.GetConfig().DeadQueueTopic)
 						if def.OnFailure != nil {
-							job := queueJob.NewJob(def.OnFailure.JobName, []queueJob.JobArgument{err})
+							job := queueJob.NewJob(def.OnFailure.JobName, err)
 							worker.queue.Enqueue(job)
 						}
 					}
-					defaultQueueConsumer.CommitMessage(&msg)
 				}
+				defaultQueueConsumer.CommitMessage(&msg)
 			}
 		case msg := <-delayedJobChan:
 			{
@@ -136,7 +141,6 @@ func retryJob(q queue.Queue, def *queueJob.JobDefinition, job queueJob.Job) erro
 }
 
 func scheduleForRetry(q queue.Queue, consumer Consumer, msg kafka.Message, job queueJob.Job) {
-	log.Println("schedule job ", job)
 	now := time.Now()
 	if job.NextRetry == nil {
 		if err := q.Enqueue(job); err == nil {
@@ -150,13 +154,11 @@ func scheduleForRetry(q queue.Queue, consumer Consumer, msg kafka.Message, job q
 		go func() {
 			<-timer.C
 			if err := q.Enqueue(job); err == nil {
-				log.Println("enququeed")
 				consumer.CommitMessage(&msg)
 			}
 		}()
 	} else {
 		if err := q.Enqueue(job); err == nil {
-			log.Println("enququeed")
 			consumer.CommitMessage(&msg)
 		}
 	}

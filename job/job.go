@@ -8,43 +8,55 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-type JobArgument interface{}
+// Argument to pass to the perform function
+type Argument interface{}
+
+// Value to store for the result of the perform function
+type Value interface{}
+
+// Perform actually executes the job.
+// It must be thread-safe.
+type Perform func(ctx context.Context, job Job) (Value, error)
 
 type Job struct {
 	ID        uuid.UUID
 	Name      string
-	Args      []JobArgument
+	Args      []Argument
 	Retries   int
 	NextRetry *time.Time
 	result    JobResult
 }
 
-func NewJob(name string, args []JobArgument) Job {
+func NewJob(name string, args ...Argument) Job {
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		log.Fatalf("Can not generate uuid %v", err)
+		log.Fatalf("Can not generate uuid %v\n", err)
 	}
 	return Job{
-		ID:   uuid,
-		Name: name,
-		Args: args,
+		ID:      uuid,
+		Name:    name,
+		Args:    args,
+		Retries: 0,
 	}
 }
 
 func (job *Job) Clone() Job {
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		log.Fatalf("Can not generate uuid %v", err)
+		log.Fatalf("Can not generate uuid %v\n", err)
 	}
 	return Job{
-		ID:      uuid,
-		Name:    job.Name,
-		Args:    job.Args,
-		Retries: job.Retries,
+		ID:        uuid,
+		Name:      job.Name,
+		Args:      job.Args,
+		Retries:   job.Retries,
+		NextRetry: job.NextRetry,
+		result:    job.result,
 	}
 }
 
 func (job *Job) SetResult(result JobResult) {
+	log.Println("args is ", job.Args, " result is ", result.Value())
 	job.result = result
 }
 
@@ -53,31 +65,27 @@ func (job *Job) GetResult() JobResult {
 }
 
 type JobResult struct {
-	ok   bool
-	data interface{}
-	err  error
+	ok  bool
+	val interface{}
+	err error
 }
 
 func (result JobResult) Ok() bool {
 	return result.ok
 }
 
-func (result JobResult) Data() interface{} {
-	return result.data
+func (result JobResult) Value() interface{} {
+	return result.val
 }
 
 func (result JobResult) Error() error {
 	return result.err
 }
 
-func NewJobResult(ok bool, data interface{}, err error) JobResult {
+func NewJobResult(ok bool, val interface{}, err error) JobResult {
 	return JobResult{
-		ok:   ok,
-		data: data,
-		err:  err,
+		ok:  ok,
+		val: val,
+		err: err,
 	}
 }
-
-// Perform actually executes the job.
-// It must be thread-safe.
-type Perform func(ctx context.Context, job Job) (interface{}, error)

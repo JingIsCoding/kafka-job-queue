@@ -11,6 +11,7 @@ type Consumer interface {
 	SubscribeTopics(topics []string, rebalanceCb kafka.RebalanceCb) error
 	Poll(int) kafka.Event
 	Events() chan kafka.Event
+	Commit() ([]kafka.TopicPartition, error)
 	CommitMessage(*kafka.Message) ([]kafka.TopicPartition, error)
 	Close() error
 }
@@ -52,6 +53,10 @@ func (consumer *kafkaConsumer) Events() chan kafka.Event {
 
 func (consumer *kafkaConsumer) CommitMessage(msg *kafka.Message) ([]kafka.TopicPartition, error) {
 	return consumer.inner.CommitMessage(msg)
+}
+
+func (consumer *kafkaConsumer) Commit() ([]kafka.TopicPartition, error) {
+	return consumer.inner.Commit()
 }
 
 func (consumer *kafkaConsumer) Close() error {

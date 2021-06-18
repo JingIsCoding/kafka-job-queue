@@ -12,7 +12,7 @@ type kafkaProducer struct {
 	inner *kafka.Producer
 }
 
-func newKafkaProducer(configMap *kafka.ConfigMap) (Producer, error) {
+func NewKafkaProducer(configMap *kafka.ConfigMap) (Producer, error) {
 	producer, err := kafka.NewProducer(configMap)
 	return &kafkaProducer{inner: producer}, err
 }

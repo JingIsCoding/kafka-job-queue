@@ -24,13 +24,13 @@ type kafkaQueue struct {
 
 func newKafkaQueue(configMap *kafka.ConfigMap, queueConfig *Config) (Queue, error) {
 	// Create admin instance
-	adminClient, err := newAdminClient(configMap)
+	adminClient, err := NewAdminClient(configMap)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create admin client %w", err)
 	}
 
 	// Create Producer instance
-	producer, err := newKafkaProducer(configMap)
+	producer, err := NewKafkaProducer(configMap)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create producer %w", err)
 	}

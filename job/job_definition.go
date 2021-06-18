@@ -12,7 +12,17 @@ type JobDefinition struct {
 	OnSuccess *JobDefinition
 }
 
-func NewJobDefinition(topic string, jobName string, retries int, deplayed *time.Duration, perform Perform) JobDefinition {
+func NewJobDefinition(jobName string, retries int, perform Perform) JobDefinition {
+	return JobDefinition{
+		JobName:  jobName,
+		Retries:  retries,
+		Deplayed: nil,
+		Perform:  perform,
+		FIFO:     false,
+	}
+}
+
+func NewDelayedJobDefinition(jobName string, retries int, deplayed *time.Duration, perform Perform) JobDefinition {
 	return JobDefinition{
 		JobName:  jobName,
 		Retries:  retries,
