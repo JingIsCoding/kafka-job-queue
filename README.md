@@ -10,7 +10,7 @@ This project relies on [confluent kafka](https://github.com/confluentinc/conflue
 ## Get started
 #### Install the library by
 ```
-go get -u github.com/JingIsCoding/kafka_job_queue
+go get -u github.com/JingIsCoding/kafka-job-queue
 ```
 
 #### Examples

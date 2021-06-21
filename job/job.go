@@ -53,6 +53,7 @@ func NewSchedulJob(name string, future time.Time, args ...Argument) Job {
 }
 
 func (job *Job) SetResult(result JobResult) {
+	log.Println("args is ", job.Args, " result is ", result.Value())
 	job.result = result
 }
 

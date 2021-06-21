@@ -12,6 +12,8 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
+var counter uint64
+
 type Worker interface {
 	Run()
 	Stop() error
